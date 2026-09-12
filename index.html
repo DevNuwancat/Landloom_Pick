@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic page setup -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LandLoom Picks</title>
+
+  <!-- All styling is kept right here in the same file to keep it simple -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 15px;
+      min-height: 100vh;
+    }
+
+    .profile {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .profile img {
+      width: 140px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .profile h1 {
+      margin-top: 12px;
+      font-size: 22px;
+    }
+
+    .profile p {
+      color: #555;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .listings {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .card-info h2 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .card-info p {
+      font-size: 11px;
+      color: #777;
+    }
+
+    .card-info .cod {
+      display: inline-block;
+      background: #e6f7ec;
+      color: #1a9e4a;
+      font-weight: bold;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-top: 3px;
+    }
+
+    .card-info .rating {
+      font-size: 12px;
+      color: #e0a500;
+      margin-top: 2px;
+    }
+
+    .card-info .rating .count {
+      color: #999;
+    }
+
+    .card-info .price-row {
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-info .price {
+      font-weight: bold;
+      color: #1a9e4a;
+      font-size: 14px;
+    }
+
+    .card-info .original-price {
+      font-size: 12px;
+      color: #999;
+      text-decoration: line-through;
+    }
+
+    /* Message shown if listings.json fails to load */
+    .error {
+      color: #999;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==== PROFILE SECTION ==== -->
+  <div class="profile">
+    <img src="logo_pick_t.png" alt="LandLoom Picks logo">
+    <h1>LandLoom Picks</h1>
+    <p>Things every house needs 🏠</p>
+  </div>
+
+  <!-- ==== LISTINGS SECTION ==== -->
+  <!-- This stays EMPTY in the HTML. JavaScript below fills it in
+       by reading listings.json. You never edit this part directly. -->
+  <div class="listings" id="listings">
+    <p class="error">Loading...</p>
+  </div>
+
+  <!-- ==== FOOTER ==== -->
+  <div class="footer">
+    LandLoom Picks &copy; 2026
+  </div>
+
+  <!-- ==== SCRIPT: reads listings.json and builds the cards ==== -->
+  <script>
+    // Find the empty box we made above, where cards will go
+    const container = document.getElementById('listings');
+
+    // Fetch (download) the listings.json file that sits next to this HTML file
+    fetch('listings.json')
+      .then(response => response.json()) // turn the file's text into a JS array
+      .then(items => {
+        // Clear the "Loading..." message
+        container.innerHTML = '';
+
+        // If the JSON file is empty, show a friendly message instead of nothing
+        if (items.length === 0) {
+          container.innerHTML = '<p class="error">No items yet. Check back soon!</p>';
+          return;
+        }
+
+        // Loop through every item in listings.json and build one card per item
+        items.forEach(item => {
+          // Build the card as an HTML string using this item's details
+          const card = document.createElement('a');
+          card.className = 'card';
+          card.href = item.link;
+          card.target = '_blank';
+          const ratingHtml = item.rating
+            ? `<p class="rating">★ ${item.rating}${item.ratingCount ? ` <span class="count">(${item.ratingCount} confirmed buyers)</span>` : ''}</p>`
+            : '';
+
+          const originalPriceHtml = item.originalPrice
+            ? `<span class="original-price">${item.originalPrice}</span>`
+            : '';
+
+          const codHtml = item.cod
+            ? `<p><span class="cod">✓ Cash on Delivery</span></p>`
+            : '';
+
+          card.innerHTML = `
+            <img src="${item.image}" alt="${item.name}">
+            <div class="card-info">
+              <h2>${item.name}</h2>
+              <p>${item.description}</p>
+              ${codHtml}
+              ${ratingHtml}
+              <div class="price-row">
+                <span class="price">${item.price}</span>
+                ${originalPriceHtml}
+              </div>
+            </div>
+          `;
+          // Add this card into the listings box on the page
+          container.appendChild(card);
+        });
+      })
+      .catch(error => {
+        // If something goes wrong (e.g. file missing), show an error instead of a blank page
+        container.innerHTML = '<p class="error">Could not load listings.</p>';
+        console.error('Error loading listings.json:', error);
+      });
+  </script>
+
+</body>
+</html>
